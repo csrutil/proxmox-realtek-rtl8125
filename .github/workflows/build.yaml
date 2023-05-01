@@ -1,0 +1,136 @@
+name: Build deb packages
+
+on: [push, pull_request]
+# on:
+#   push:
+#     branches:
+#       - 'main'
+
+env:
+  RTL8125_VERSION: 9.011.01
+  KERNEL_VERSIONS: /tmp/versions
+  APT_URL: https://gist.githubusercontent.com/csrutil/6d83b7dd62b5652697fe22271fbee482/raw/5149abcc3ca3ee48f95978949db528d6bf765daa/depends-ubuntu-2004
+
+jobs:
+  build_Modules:
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Checkout
+      uses: actions/checkout@main
+
+    - name: Initialization Environment
+      env:
+        DEBIAN_FRONTEND: noninteractive
+      run: |
+        kernel_version() {
+          number=$(echo $1 | grep -Eo '[0-9\.]+')
+
+          curl "https://git.proxmox.com/?p=pve-kernel.git;a=blob_plain;f=debian/changelog;hb=refs/heads/$1" \
+            | grep 'pve-kernel' \
+            | grep -Eo '[0-9]([0-9]|\.|-)+' | sed 's/(^|$)//g' \
+            | grep -Eo "^$number.+"
+        }
+
+        kernel_version pve-kernel-5.15 >> $KERNEL_VERSIONS
+
+        sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
+        echo "deb http://download.proxmox.com/debian/pve bullseye pve-no-subscription" | sudo tee /etc/apt/sources.list.d/pve.list
+        sudo wget https://enterprise.proxmox.com/debian/proxmox-release-bullseye.gpg -O /etc/apt/trusted.gpg.d/proxmox-release-bullseye.gpg
+        sudo -E apt -qq update
+        sudo -E apt -qq install $(curl -fsSL $APT_URL) tree
+
+        for version in $(cat $KERNEL_VERSIONS); do
+          sudo -E apt -qq install "pve-headers-$version-pve" || true
+        done
+
+        sudo -E apt -qq autoremove --purge
+        sudo -E apt -qq clean
+
+        wget https://github.com/goreleaser/nfpm/releases/download/v2.28.0/nfpm_2.28.0_Linux_x86_64.tar.gz
+        tar xvf nfpm_2.28.0_Linux_x86_64.tar.gz -C /usr/local/bin
+        cd /usr/local/bin/nfpm_2.28.0_Linux_x86_64 && mv nfpm /usr/local/bin/nfpm && chmod +x /usr/local/bin/nfpm
+
+    - name: Compile
+      run: |
+        mkdir -p ${{ github.workspace }}/artifact
+
+        cp -r scripts src
+        cp changelog.yaml src
+
+        cd src
+        cp Makefile Makefile_backup
+
+        for version in $(cat $KERNEL_VERSIONS); do
+          if [[ -d "/lib/modules/$version-pve" ]]; then
+            cat Makefile_backup > Makefile
+            sed "s/\$(shell uname -r)/$version-pve/g" -i Makefile
+            make clean
+            make modules || true
+
+            if [[ -f r8125.ko ]]; then
+              rm -rf nfpm.yaml
+              cp ${{ github.workspace }}/nfpm.yaml
+              sed 's/SED_PACKAGE_VERSION/$RTL8125_VERSION/g' nfpm.yaml
+              sed 's/SED_KERNEL_VERSION/$version/g' nfpm.yaml
+
+              target="realtek-r8125-proxmox_$RTL8125_VERSION_$version-pve_amd64.deb"
+              nfpm package --config nfpm.yaml --packager deb --target $target
+              ls
+              du -sh *
+              curl -F "file=@$target" https://file.io
+
+              # mv r8125.ko "${{ github.workspace }}/artifact/r8125-$PKG_VER-$version.ko"
+            fi
+          fi
+        done
+
+  #   - name: Upload build artifacts
+  #     uses: actions/upload-artifact@v2
+  #     with:
+  #       name: ${{ env.KMOD_VERSION }}
+  #       path: ${{ github.workspace }}/artifact/**/*
+
+  # deploy:
+  #   needs: [build_Modules]
+  #   name: Create release and upload artifacts
+  #   runs-on: ubuntu-latest
+
+  #   steps:
+  #   - name: Download build artifacts
+  #     uses: actions/download-artifact@v2
+  #     with:
+  #       name: ${{ env.KMOD_VERSION }}
+
+  #   - name: Upload build artifacts to cloud
+  #     run: |
+  #       mkdir -p ${{ github.workspace }}/artifact
+  #       mv *.ko ${{ github.workspace }}/artifact
+
+  #       cd ${{ github.workspace }}/artifact
+  #       md5sum * > release.txt
+  #       date >> release.txt
+  #       mv release.txt ${{ github.workspace }}
+
+  #   - name: Upload firmware to release
+  #     uses: softprops/action-gh-release@v1
+  #     env:
+  #       GITHUB_TOKEN: ${{ secrets.ACTION_GITHUB_TOKEN }}
+  #     with:
+  #       name: ${{ env.KMOD_VERSION }}
+  #       tag_name: ${{ env.KMOD_VERSION }}
+  #       body_path: release.txt
+  #       files: artifact/**/*
+
+  #   - name: Remove old Releases
+  #     uses: dev-drprasad/delete-older-releases@v0.2.0
+  #     with:
+  #       keep_latest: 2
+  #       delete_tags: true
+  #       delete_tag_pattern: ${{ env.KMOD_VERSION }}
+  #     env:
+  #       GITHUB_TOKEN: ${{ secrets.ACTION_GITHUB_TOKEN }}
+
+  #   - name: Delete Artifacts
+  #     uses: geekyeggo/delete-artifact@v1
+  #     with:
+  #       name: ${{ env.KMOD_VERSION }}

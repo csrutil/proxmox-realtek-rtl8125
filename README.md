@@ -1,2 +1,2 @@
-# proxmox-realtek-rtl8125
-realtek rtl8125 driver for proxmox
+# realtek-r8125-proxmox
+🦀️realtek r8125 driver for proxmox

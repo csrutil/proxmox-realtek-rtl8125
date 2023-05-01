@@ -1,5 +1,5 @@
 # Name. (required)
-name: proxmox-realtek-rtl8125
+name: realtek-r8125-proxmox
 
 arch: amd64
 
@@ -7,7 +7,7 @@ arch: amd64
 platform: linux
 
 # Version
-version: ${SEMVER}
+version: SED_PACKAGE_VERSION
 
 # Version Schema
 version_schema: semver
@@ -65,7 +65,7 @@ description: Realtek RTL8125 2.5Gigabit Ethernet driver for proxmox
 # vendor: GoReleaser
 
 # Package's homepage.
-homepage: https://github.com/csrutil/proxmox-realtek-rtl8125
+homepage: https://github.com/csrutil/realtek-r8125-proxmox
 
 # License.
 license: MIT
@@ -95,7 +95,7 @@ disable_globbing: false
 # the env var approach can be used to account for differences in platforms
 # e.g. rhel needs nginx >= 1:1.18 and deb needs nginx (>= 1.18.0)
 depends:
-  - pve-kernel-${KERNEL_VERSION}-pve
+  - pve-kernel-SED_KERNEL_VERSION-pve
 
 # Recommended packages. (overridable)
 # This will expand any env var you set in the field, e.g. ${RECOMMENDS_BLA}
@@ -122,7 +122,7 @@ depends:
 contents:
   # Basic file that applies to all packagers
   - src: r8125.ko
-    dst: /lib/modules/5.15.102-1-pve/kernel/drivers/net/ethernet/realtek/r8125.ko
+    dst: /lib/modules/SED_KERNEL_VERSION-pve/kernel/drivers/net/ethernet/realtek/r8125.ko
     packager: deb
     file_info:
       mode: 0644
