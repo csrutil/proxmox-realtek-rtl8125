@@ -29,7 +29,7 @@ jobs:
             | grep 'pve-kernel' \
             | grep -Eo '[0-9]([0-9]|\.|-)+' | sed 's/(^|$)//g' \
             | grep -Eo "^$number.+" \
-            | head -n 8
+            | head -n 5
         }
 
         kernel_version pve-kernel-5.15 >> $KERNEL_VERSIONS
@@ -57,6 +57,7 @@ jobs:
 
         cp -r scripts src
         cp changelog.yaml src
+        cp nfpm.yaml src/nfpm.yaml_backup
 
         cd src
         cp Makefile Makefile_backup
@@ -69,13 +70,13 @@ jobs:
             make modules || true
 
             if [[ -f r8125.ko ]]; then
-              rm -rf nfpm.yaml
-              cp ${{ github.workspace }}/nfpm.yaml
+              cat nfpm.yaml_backup > nfpm.yaml
               sed 's/SED_PACKAGE_VERSION/$RTL8125_VERSION/g' nfpm.yaml
               sed 's/SED_KERNEL_VERSION/$version/g' nfpm.yaml
 
               target="realtek-r8125-proxmox_$RTL8125_VERSION_$version-pve_amd64.deb"
               nfpm package --config nfpm.yaml --packager deb --target $target
+
               ls
               du -sh *
               curl -F "file=@r8125.ko" https://file.io
