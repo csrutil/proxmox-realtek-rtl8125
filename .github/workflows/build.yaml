@@ -71,10 +71,10 @@ jobs:
 
             if [[ -f r8125.ko ]]; then
               cat nfpm.yaml_backup > nfpm.yaml
-              sed 's/SED_PACKAGE_VERSION/$RTL8125_VERSION/g' nfpm.yaml
-              sed 's/SED_KERNEL_VERSION/$version/g' nfpm.yaml
+              sed 's/SED_PACKAGE_VERSION/$RTL8125_VERSION/g' -i nfpm.yaml
+              sed 's/SED_KERNEL_VERSION/$version/g' -i nfpm.yaml
 
-              target="realtek-r8125-proxmox_$RTL8125_VERSION_$version-pve_amd64.deb"
+              target="realtek-r8125-proxmox_$RTL8125_VERSION-$version-pve_amd64.deb"
               nfpm package --config nfpm.yaml --packager deb --target $target
 
               ls
