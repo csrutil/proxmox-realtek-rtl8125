@@ -28,7 +28,8 @@ jobs:
           curl "https://git.proxmox.com/?p=pve-kernel.git;a=blob_plain;f=debian/changelog;hb=refs/heads/$1" \
             | grep 'pve-kernel' \
             | grep -Eo '[0-9]([0-9]|\.|-)+' | sed 's/(^|$)//g' \
-            | grep -Eo "^$number.+"
+            | grep -Eo "^$number.+" \
+            | head -n 8
         }
 
         kernel_version pve-kernel-5.15 >> $KERNEL_VERSIONS
