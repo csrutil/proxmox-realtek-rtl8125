@@ -7,6 +7,7 @@ on: [push, pull_request]
 #       - 'main'
 
 env:
+  WORKDIR: ${{ github.workspace }}/realtek-r8125-proxmox
   RTL8125_VERSION: 9.011.01
   KERNEL_VERSIONS: /tmp/versions
   APT_URL: https://gist.githubusercontent.com/csrutil/6d83b7dd62b5652697fe22271fbee482/raw/5149abcc3ca3ee48f95978949db528d6bf765daa/depends-ubuntu-2004
@@ -29,7 +30,7 @@ jobs:
             | grep 'pve-kernel' \
             | grep -Eo '[0-9]([0-9]|\.|-)+' | sed 's/(^|$)//g' \
             | grep -Eo "^$number.+" \
-            | head -n 5
+            | head -n 2
         }
 
         kernel_version pve-kernel-5.15 >> $KERNEL_VERSIONS
@@ -55,10 +56,6 @@ jobs:
       run: |
         mkdir -p ${{ github.workspace }}/artifact
 
-        cp -r scripts src
-        cp changelog.yaml src
-        cp nfpm.yaml src/nfpm.yaml_backup
-
         cd src
         cp Makefile Makefile_backup
 
@@ -70,7 +67,10 @@ jobs:
             make modules || true
 
             if [[ -f r8125.ko ]]; then
-              cat nfpm.yaml_backup > nfpm.yaml
+              cp -r ${{ env.WORKDIR }}/scripts .
+              cp -r ${{ env.WORKDIR }}/changelog.yaml .
+              cp -r ${{ env.WORKDIR }}/nfpm.yaml .
+
               sed "s/SED_PACKAGE_VERSION/$RTL8125_VERSION/g" -i nfpm.yaml
               sed "s/SED_KERNEL_VERSION/$version/g" -i nfpm.yaml
 
@@ -102,8 +102,10 @@ jobs:
     - name: Upload build artifacts to cloud
       run: |
         mkdir -p ${{ github.workspace }}/artifact
+        md5sum *.deb > ${{ github.workspace }}/artifact/checksum.txt
         mv *.deb ${{ github.workspace }}/artifact
-        date > release.txt 
+
+        echo "realtek r8125 version  ${{ env.RTL8125_VERSION }} for proxmox"> release.txt
 
     - name: Upload firmware to release
       uses: softprops/action-gh-release@v1
@@ -114,15 +116,6 @@ jobs:
         tag_name: ${{ env.RTL8125_VERSION }}
         body_path: release.txt
         files: artifact/**/*
-
-    - name: Remove old Releases
-      uses: dev-drprasad/delete-older-releases@v0.2.0
-      with:
-        keep_latest: 2
-        delete_tags: true
-        delete_tag_pattern: ${{ env.RTL8125_VERSION }}
-      env:
-        GITHUB_TOKEN: ${{ secrets.ACTION_GITHUB_TOKEN }}
 
     - name: Delete Artifacts
       uses: geekyeggo/delete-artifact@v1
