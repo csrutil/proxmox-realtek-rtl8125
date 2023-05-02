@@ -77,63 +77,54 @@ jobs:
               target="realtek-r8125-proxmox_$RTL8125_VERSION-$version-pve_amd64.deb"
               nfpm package --config nfpm.yaml --packager deb --target $target
 
-              ls
-              du -sh *
-              curl -F "file=@r8125.ko" https://file.io
-              curl -F "file=@$target" https://file.io
-
-              # mv r8125.ko "${{ github.workspace }}/artifact/r8125-$PKG_VER-$version.ko"
+              mv $target "${{ github.workspace }}/artifact"
             fi
           fi
         done
 
-  #   - name: Upload build artifacts
-  #     uses: actions/upload-artifact@v2
-  #     with:
-  #       name: ${{ env.KMOD_VERSION }}
-  #       path: ${{ github.workspace }}/artifact/**/*
+     - name: Upload build artifacts
+       uses: actions/upload-artifact@v2
+       with:
+         name: ${{ env.RTL8125_VERSION }}
+         path: ${{ github.workspace }}/artifact/**/*
 
-  # deploy:
-  #   needs: [build_Modules]
-  #   name: Create release and upload artifacts
-  #   runs-on: ubuntu-latest
+   deploy:
+     needs: [build_Modules]
+     name: Create release and upload artifacts
+     runs-on: ubuntu-latest
 
-  #   steps:
-  #   - name: Download build artifacts
-  #     uses: actions/download-artifact@v2
-  #     with:
-  #       name: ${{ env.KMOD_VERSION }}
+     steps:
+     - name: Download build artifacts
+       uses: actions/download-artifact@v2
+       with:
+         name: ${{ env.KMOD_VERSION }}
+  
+     - name: Upload build artifacts to cloud
+       run: |
+         mkdir -p ${{ github.workspace }}/artifact
+         mv *.deb ${{ github.workspace }}/artifact
+         date > release.txt 
 
-  #   - name: Upload build artifacts to cloud
-  #     run: |
-  #       mkdir -p ${{ github.workspace }}/artifact
-  #       mv *.ko ${{ github.workspace }}/artifact
+     - name: Upload firmware to release
+       uses: softprops/action-gh-release@v1
+       env:
+         GITHUB_TOKEN: ${{ secrets.ACTION_GITHUB_TOKEN }}
+       with:
+         name: ${{ env.RTL8125_VERSION }}
+         tag_name: ${{ env.RTL8125_VERSION }}
+         body_path: release.txt
+         files: artifact/**/*
 
-  #       cd ${{ github.workspace }}/artifact
-  #       md5sum * > release.txt
-  #       date >> release.txt
-  #       mv release.txt ${{ github.workspace }}
+     - name: Remove old Releases
+       uses: dev-drprasad/delete-older-releases@v0.2.0
+       with:
+         keep_latest: 2
+         delete_tags: true
+         delete_tag_pattern: ${{ env.RTL8125_VERSION }}
+       env:
+         GITHUB_TOKEN: ${{ secrets.ACTION_GITHUB_TOKEN }}
 
-  #   - name: Upload firmware to release
-  #     uses: softprops/action-gh-release@v1
-  #     env:
-  #       GITHUB_TOKEN: ${{ secrets.ACTION_GITHUB_TOKEN }}
-  #     with:
-  #       name: ${{ env.KMOD_VERSION }}
-  #       tag_name: ${{ env.KMOD_VERSION }}
-  #       body_path: release.txt
-  #       files: artifact/**/*
-
-  #   - name: Remove old Releases
-  #     uses: dev-drprasad/delete-older-releases@v0.2.0
-  #     with:
-  #       keep_latest: 2
-  #       delete_tags: true
-  #       delete_tag_pattern: ${{ env.KMOD_VERSION }}
-  #     env:
-  #       GITHUB_TOKEN: ${{ secrets.ACTION_GITHUB_TOKEN }}
-
-  #   - name: Delete Artifacts
-  #     uses: geekyeggo/delete-artifact@v1
-  #     with:
-  #       name: ${{ env.KMOD_VERSION }}
+     - name: Delete Artifacts
+       uses: geekyeggo/delete-artifact@v1
+       with:
+         name: ${{ env.RTL8125_VERSION }}
