@@ -74,6 +74,7 @@ jobs:
               sed "s/SED_KERNEL_VERSION/$version/g" -i nfpm.yaml
 
               target="realtek-r8125-proxmox_$RTL8125_VERSION-$version-pve_amd64.deb"
+              find .
               nfpm package --config nfpm.yaml --packager deb --target $target
 
               mv $target "${{ github.workspace }}/artifact"
