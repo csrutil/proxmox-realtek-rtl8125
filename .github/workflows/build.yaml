@@ -7,7 +7,6 @@ on: [push, pull_request]
 #       - 'main'
 
 env:
-  WORKDIR: ${{ github.workspace }}/realtek-r8125-proxmox
   RTL8125_VERSION: 9.011.01
   KERNEL_VERSIONS: /tmp/versions
   APT_URL: https://gist.githubusercontent.com/csrutil/6d83b7dd62b5652697fe22271fbee482/raw/5149abcc3ca3ee48f95978949db528d6bf765daa/depends-ubuntu-2004
@@ -67,9 +66,9 @@ jobs:
             make modules || true
 
             if [[ -f r8125.ko ]]; then
-              cp -r ${{ env.WORKDIR }}/scripts .
-              cp -r ${{ env.WORKDIR }}/changelog.yaml .
-              cp -r ${{ env.WORKDIR }}/nfpm.yaml .
+              cp -r ${{ github.workspace }}/scripts .
+              cp -r ${{ github.workspace }}/changelog.yaml .
+              cp -r ${{ github.workspace }}/nfpm.yaml .
 
               sed "s/SED_PACKAGE_VERSION/$RTL8125_VERSION/g" -i nfpm.yaml
               sed "s/SED_KERNEL_VERSION/$version/g" -i nfpm.yaml
