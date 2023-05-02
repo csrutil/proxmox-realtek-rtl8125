@@ -1,5 +1,5 @@
 name: Build deb packages
-
+n
 on: [push, pull_request]
 # on:
 #   push:
@@ -97,7 +97,7 @@ jobs:
     - name: Download build artifacts
       uses: actions/download-artifact@v2
       with:
-        name: ${{ env.KMOD_VERSION }}
+        name: ${{ env.RTL8125_VERSION }}
 
     - name: Upload build artifacts to cloud
       run: |
