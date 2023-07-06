@@ -1,11 +1,11 @@
 name: Build deb packages
 
-on: [push, pull_request]
-# on:
-#   push:
-#     branches:
-#       - 'main'
-
+on:
+  schedule:
+    - cron: "0 13 * * 1"
+  push:
+    branches:
+      - 'main'
 env:
   RTL8125_VERSION: 9.011.01
   KERNEL_VERSIONS: /tmp/versions
