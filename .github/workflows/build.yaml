@@ -64,7 +64,7 @@ jobs:
 
         for version in $(cat $KERNEL_VERSIONS); do
           if [[ -d "/lib/modules/$version-pve" ]]; then
-            cd ${{ github.workspace }/src
+            cd ${{ github.workspace }}/src
 
             cat Makefile_backup > Makefile
             sed "s/\$(shell uname -r)/$version-pve/g" -i Makefile
