@@ -2,7 +2,7 @@ name: Build deb packages
 
 on:
   schedule:
-    - cron: "0 13 * * 1"
+    - cron: "0 0 * * 1"
   push:
     branches:
       - 'main'
