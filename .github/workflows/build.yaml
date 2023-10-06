@@ -124,7 +124,9 @@ jobs:
       run: |
         mkdir -p ${{ github.workspace }}/artifact
         md5sum *.deb > ${{ github.workspace }}/artifact/checksum.txt
+        md5sum *.ko >> ${{ github.workspace }}/artifact/checksum.txt
         mv *.deb ${{ github.workspace }}/artifact
+        mv *.ko ${{ github.workspace }}/artifact
 
         echo "realtek r8125 version  ${{ env.RTL8125_VERSION }} for proxmox"> release.txt
 
