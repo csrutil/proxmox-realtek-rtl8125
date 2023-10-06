@@ -87,7 +87,7 @@ jobs:
             fi
 
             # ixgbe
-            cd ${{ github.workspace }
+            cd ${{ github.workspace }}
             rm -rf "ixgbe-$IXGBE_VERSION"
             tar xvf "/tmp/ixgbe-$IXGBE_VERSION.tar.gz"
             cd "ixgbe-$IXGBE_VERSION/src"
