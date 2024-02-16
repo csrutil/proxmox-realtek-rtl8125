@@ -10,7 +10,6 @@ env:
   RTL8125_VERSION: 9.012.032
   IXGBE_VERSION: 5.19.9
   KERNEL_VERSIONS: /tmp/versions
-  APT_URL: https://gist.githubusercontent.com/csrutil/6d83b7dd62b5652697fe22271fbee482/raw/5149abcc3ca3ee48f95978949db528d6bf765daa/depends-ubuntu-2004
 
 jobs:
   build_Modules:
@@ -34,7 +33,7 @@ jobs:
         }
 
         kernel_version pve-kernel-5.15 >> $KERNEL_VERSIONS
-        curl "https://git.proxmox.com/?p=pve-kernel.git;a=blob_plain;f=debian/changelog;hb=HEAD" | grep proxmox-kernel | grep -Eo '\([0-9\.-]+' | cut -c 2- | head -n 2 >> $KERNEL_VERSIONS
+        curl "https://git.proxmox.com/?p=pve-kernel.git;a=blob_plain;f=debian/changelog;hb=HEAD" | grep proxmox-kernel | grep -Eo "\([0-9\.-]+" | cut -c 2- | head -n 2 >> $KERNEL_VERSIONS
 
         sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
         echo "deb http://download.proxmox.com/debian/pve bullseye pve-no-subscription" | sudo tee /etc/apt/sources.list.d/pve.list
@@ -44,7 +43,7 @@ jobs:
         sudo wget https://enterprise.proxmox.com/debian/proxmox-release-bookworm.gpg -O /etc/apt/trusted.gpg.d/proxmox-release-bookworm.gpg
 
         sudo -E apt -qq update
-        sudo -E apt -qq install $(curl -fsSL $APT_URL) tree
+        sudo -E apt -qq install build-essential asciidoc binutils bzip2 gawk gettext git libncurses5-dev libz-dev patch python3 python2.7 unzip zlib1g-dev lib32gcc-s1 libc6-dev-i386 subversion flex uglifyjs git-core gcc-multilib p7zip p7zip-full msmtp libssl-dev texinfo libglib2.0-dev xmlto qemu-utils upx libelf-dev autoconf automake libtool autopoint device-tree-compiler g++-multilib antlr3 gperf wget curl swig rsync python3 git-core curl tree
 
         for version in $(cat $KERNEL_VERSIONS); do
           sudo -E apt -qq install "pve-headers-$version-pve" || true
