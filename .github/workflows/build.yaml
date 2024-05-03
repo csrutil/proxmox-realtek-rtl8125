@@ -8,7 +8,7 @@ on:
       - 'main'
 env:
   RTL8125_VERSION: 9.012.032
-  IXGBE_VERSION: 5.19.9
+  IXGBE_VERSION: 5.20.3
   KERNEL_VERSIONS: /tmp/versions
 
 jobs:
