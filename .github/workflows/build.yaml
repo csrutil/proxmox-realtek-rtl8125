@@ -7,8 +7,8 @@ on:
     branches:
       - 'main'
 env:
-  RTL8125_VERSION: 9.012.032
-  IXGBE_VERSION: 5.20.3
+  RTL8125_VERSION: 9.013.02
+  IXGBE_VERSION: 5.20.9
   KERNEL_VERSIONS: /tmp/versions
 
 jobs:
@@ -150,3 +150,4 @@ jobs:
       uses: geekyeggo/delete-artifact@v1
       with:
         name: ${{ env.RTL8125_VERSION }}
+
